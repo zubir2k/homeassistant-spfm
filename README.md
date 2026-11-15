@@ -23,9 +23,11 @@ A Home Assistant custom integration for the [SPFM Selfcare portal](https://spfm.
 
 ## Installation
 
-### HACS (custom repository)
+### Marketplace/HACS (custom repository)
 
-1. HACS → **Integrations** → ⋮ → **Custom repositories**
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=zubir2k&repository=homeassistant-spfm&category=integration)
+
+1. Marketplace/HACS → **Integrations** → ⋮ → **Custom repositories**
 2. Add this repository's URL, category **Integration**
 3. Install **SPFM**, then restart Home Assistant
 
@@ -34,6 +36,8 @@ A Home Assistant custom integration for the [SPFM Selfcare portal](https://spfm.
 Copy `custom_components/spfm/` into your Home Assistant `config/custom_components/` folder and restart.
 
 ## Configuration
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=spfm)
 
 **Settings → Devices & Services → Add Integration → SPFM**, then enter your SPFM email and password.
 If more than one unit is linked, pick the ones to monitor.
@@ -76,7 +80,7 @@ Data: `unit_id`, `unit_no`, `project`, `id`, `title`, `url`, `published`, `summa
 Debug: Developer Tools → Events → listen to `spfm_new_announcement`; the integration also logs
 `SPFM new announcement …` at INFO level.
 
-## Notifications & visitors (v0.4.0)
+## Notifications & visitors
 
 Polled every **2 minutes** from the same feeds the SPFM mobile app uses (found by reading the app's bundle):
 
@@ -101,7 +105,7 @@ Both lists use the same row keys: `id`, `title`, `published`, `active`, `url`, `
 
 Markdown card example:
 ```jinja
-{% for a in state_attr('sensor.residensi_jernih_kajang_a_10_01_latest_announcement','announcements')[:5] %}
+{% for a in state_attr('sensor.residensi_jernih_kajang_latest_announcement','announcements')[:5] %}
 - **{{ a.title }}** · {{ as_timestamp(a.published) | timestamp_custom('%d %b') }}{% if a.pdf_url %} · [PDF]({{ a.pdf_url }}){% endif %}
 {% endfor %}
 ```
@@ -187,7 +191,7 @@ Dashboard card listing recent notices as links:
 type: markdown
 title: Building notices
 content: >
-  {% for a in state_attr('sensor.residensi_jernih_kajang_a_01_01_active_announcements', 'announcements') %}
+  {% for a in state_attr('sensor.residensi_jernih_kajang_active_announcements', 'announcements') %}
   - [{{ a.title }}]({{ a.url }}){% if a.pdf_url %} · [PDF]({{ a.pdf_url }}){% endif %} <small>{{ a.published[:10] }}</small>
   {% endfor %}
 ```
@@ -199,17 +203,17 @@ automation:
   - alias: "SPFM bill outstanding"
     trigger:
       - platform: numeric_state
-        entity_id: sensor.residensi_jernih_kajang_a_01_01_outstanding_balance
+        entity_id: sensor.residensi_jernih_kajang_outstanding_balance
         above: 0
     action:
       - service: notify.mobile_app_phone
         data:
           message: >
-            SPFM: RM{{ states('sensor.residensi_jernih_kajang_a_01_01_outstanding_balance') }}
-            due {{ states('sensor.residensi_jernih_kajang_a_01_01_next_due_date') }}
+            SPFM: RM{{ states('sensor.residensi_jernih_kajang_outstanding_balance') }}
+            due {{ states('sensor.residensi_jernih_kajang_next_due_date') }}
 ```
 
-## Bills (v0.8.0)
+## Bills
 
 - `sensor.<unit>_outstanding_balance` now carries `bills` (unpaid documents grouped per bill: `reference_no`, `date`, `due`, `amount`, `items`, `pdf_path`) and `pay_url`.
 - `pdf_path` is a Home Assistant path (`/api/spfm/document/<unit>/<BILL|RECEIPT|CN|DN>/<record_id>`). HA fetches the PDF from SPFM with your token, so the token never reaches the browser. It needs HA auth; the card signs the path for you.
@@ -250,18 +254,18 @@ triggers:
 conditions:
   - condition: template
     value_template: >-
-      {% set due = states('sensor.residensi_jernih_kajang_a_10_01_next_due_date') %}
+      {% set due = states('sensor.residensi_jernih_kajang_next_due_date') %}
       {{ due not in ['unknown','unavailable','none']
          and (as_datetime(due).date() - now().date()).days == 3
-         and states('sensor.residensi_jernih_kajang_a_10_01_outstanding_balance') | float(0) > 0 }}
+         and states('sensor.residensi_jernih_kajang_outstanding_balance') | float(0) > 0 }}
 actions:
   - action: notify.mobile_app_your_phone
     data:
       title: SPFM bill due in 3 days
-      message: "RM{{ states('sensor.residensi_jernih_kajang_a_10_01_outstanding_balance') }} outstanding."
+      message: "RM{{ states('sensor.residensi_jernih_kajang_outstanding_balance') }} outstanding."
 ```
 
-## Dashboard cards (v0.9.0)
+## Dashboard cards
 
 ![SPFM cards, light and dark](docs/card.png)
 
@@ -301,29 +305,6 @@ Tapping a section header (stacked cards) opens that sensor's details. The card f
 
 If a dashboard is in a browser that was open before the update, refresh the page once.
 
-## Brand
-
-Icons and logos are in `custom_components/spfm/brand/` (Home Assistant 2026.3+ picks them up; a restart is needed after updating).
-
-## How it works
-
-- Bill PDFs: `GET /service/api/selfcare/billing/download-invoice/{record_id}` (also `download-receipt`, `download-crnote`, `download-dbnote`) with the unit params and bearer token, proxied by `views.py`.
-
-
-The portal is a Vue app over a Laravel API at `https://spfm.com.my/service`:
-
-| Purpose | Request |
-| --- | --- |
-| Login | `POST /service/oauth/token` — Passport password grant, `provider=members`, public web client id/secret from the SPA bundle |
-| Profile | `GET /service/api/selfcare/my-account` |
-| Units / projects | `GET /service/api/selfcare/my-unit`, `my-project`, `my-company` |
-| Statement | `GET /service/api/selfcare/billing/billing-and-payment?project_id&company_id&my_username&my_unit_id` |
-| Unpaid items | `GET /service/api/selfcare/billing/outstanding?…&cleared=0` |
-| Announcements | `GET /service/api/selfcare/announcement?project_id&company_id&username&unit_id` (ISO dates, HTML `message`, public attachment URLs); portal page `/prod/selfcare/announcement/detail/{id}` |
-
-Statement rows have `type` `BILL` (one row per charge item, grouped by `reference_no`), `RECEIPT`, `DN`, `CN`;
-`date`/`due` are Unix timestamps at midnight Malaysia time.
-
 ## Limitations
 
 - Accounts with **two-factor (OTP) login** enabled aren't supported (setup shows a clear error).
@@ -336,6 +317,6 @@ pip install pytest pytest-homeassistant-custom-component
 pytest tests
 ```
 
-## Join us
+## Join the community
 
 [Home Assistant Malaysia](https://www.facebook.com/groups/homeassistantmalaysia)
