@@ -284,3 +284,55 @@ async def test_visitor_calendar(hass: HomeAssistant) -> None:
     assert len(evs) == 2
     assert evs[0]["summary"] == "Test Contractor (Contractor)"
     assert "Purpose: Fibre installation" in evs[0]["description"]
+
+
+async def test_failed_appointments_on_first_poll_does_not_flood_on_recovery(hass: HomeAssistant) -> None:
+    """If appointments fail on the baseline poll, recovering on the next poll must baseline instead of flooding."""
+    from custom_components.spfm.api import SPFMConnectionError
+    from custom_components.spfm.const import EVENT_VISITOR_ARRIVED, EVENT_VISITOR_DEPARTED
+
+    entry = _entry(hass)
+    client = _patch_client()
+    # First poll: appointments fail, but pending succeeds.
+    client.get_appointments.side_effect = SPFMConnectionError("timeout")
+    events = _listen(hass, EVENT_VISITOR_ARRIVED, EVENT_VISITOR_DEPARTED)
+    with patch("custom_components.spfm.SPFMClient", return_value=client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert events == []
+
+        # Second poll: appointments succeed with historical scan_in/scan_out records.
+        scanned = [dict(a, scan_in_time="2026-08-01T10:00:00+08:00", scan_out_time="2026-08-01T11:00:00+08:00") for a in APPTS]
+        client.get_appointments.side_effect = None
+        client.get_appointments.return_value = scanned
+        await entry.runtime_data.activity.async_refresh()
+        await hass.async_block_till_done()
+        assert events == []  # must baseline, not flood!
+
+
+async def test_reconfigure_flow_and_diagnostics(hass: HomeAssistant) -> None:
+    from custom_components.spfm.diagnostics import async_get_config_entry_diagnostics
+
+    entry = _entry(hass)
+    client = _patch_client()
+    with patch("custom_components.spfm.SPFMClient", return_value=client), patch(
+        "custom_components.spfm.config_flow.SPFMClient", return_value=client
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        diag = await async_get_config_entry_diagnostics(hass, entry)
+        assert diag["entry"]["data"][CONF_USERNAME] == "**REDACTED**"
+        assert diag["entry"]["data"][CONF_PASSWORD] == "**REDACTED**"
+        assert diag["units"][0]["unit_no"] == "A-01-01"
+
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "a@b.com", CONF_PASSWORD: "new-password"}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_PASSWORD] == "new-password"
+

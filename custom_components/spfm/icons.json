@@ -1,0 +1,58 @@
+{
+  "entity": {
+    "sensor": {
+      "outstanding_balance": {
+        "default": "mdi:cash-clock"
+      },
+      "next_due_date": {
+        "default": "mdi:calendar-clock"
+      },
+      "last_bill_amount": {
+        "default": "mdi:file-document-outline"
+      },
+      "last_bill_date": {
+        "default": "mdi:calendar-blank-outline"
+      },
+      "last_payment_amount": {
+        "default": "mdi:cash-check"
+      },
+      "last_payment_date": {
+        "default": "mdi:calendar-check-outline"
+      },
+      "service_charge": {
+        "default": "mdi:office-building-cog"
+      },
+      "sinking_fund": {
+        "default": "mdi:piggy-bank-outline"
+      },
+      "latest_announcement": {
+        "default": "mdi:bullhorn-outline"
+      },
+      "active_announcements": {
+        "default": "mdi:file-document-multiple-outline"
+      },
+      "pending_visitors": {
+        "default": "mdi:account-clock-outline"
+      },
+      "upcoming_visitors": {
+        "default": "mdi:account-arrow-right-outline"
+      }
+    },
+    "calendar": {
+      "announcements": {
+        "default": "mdi:bullhorn-variant-outline"
+      },
+      "visitors": {
+        "default": "mdi:account-group-outline"
+      }
+    }
+  },
+  "services": {
+    "approve_visitor": {
+      "service": "mdi:account-check-outline"
+    },
+    "reject_visitor": {
+      "service": "mdi:account-cancel-outline"
+    }
+  }
+}

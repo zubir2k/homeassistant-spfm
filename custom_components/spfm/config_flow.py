@@ -141,6 +141,9 @@ class SPFMConfigFlow(ConfigFlow, domain=DOMAIN):
                 await _login_and_discover(self.hass, entry.data[CONF_USERNAME], user_input[CONF_PASSWORD])
             except SPFMError as err:
                 errors["base"] = _errors_for(err)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected error re-authenticating with SPFM")
+                errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
                     entry, data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]}
@@ -158,6 +161,49 @@ class SPFMConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    # ---------------------------------------------------------- reconfigure
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            username = user_input[CONF_USERNAME].strip()
+            password = user_input[CONF_PASSWORD]
+            try:
+                account, units = await _login_and_discover(self.hass, username, password)
+            except SPFMError as err:
+                errors["base"] = _errors_for(err)
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected error reconfiguring SPFM")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(str(account.get("id") or username.lower()))
+                self._abort_if_unique_id_mismatch()
+                if not units:
+                    errors["base"] = "no_units"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                            CONF_ACCOUNT_ID: account.get("id"),
+                        },
+                    )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")): selector.TextSelector(
+                        selector.TextSelectorConfig(type=selector.TextSelectorType.EMAIL, autocomplete="username")
+                    ),
+                    vol.Required(CONF_PASSWORD): selector.TextSelector(
+                        selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD, autocomplete="current-password")
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
@@ -167,6 +213,9 @@ class SPFMConfigFlow(ConfigFlow, domain=DOMAIN):
 class SPFMOptionsFlow(OptionsFlow):
     """Pick which units to monitor."""
 
+    def __init__(self) -> None:
+        self._units: list[SPFMUnit] | None = None
+
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         entry = self.config_entry
@@ -175,13 +224,17 @@ class SPFMOptionsFlow(OptionsFlow):
                 errors["base"] = "select_at_least_one"
             else:
                 return self.async_create_entry(data={CONF_UNITS: user_input[CONF_UNITS]})
-        try:
-            _, units = await _login_and_discover(
-                self.hass, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
-            )
-        except SPFMError as err:
-            return self.async_abort(reason=_errors_for(err))
+        if self._units is None:
+            try:
+                _, self._units = await _login_and_discover(
+                    self.hass, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+                )
+            except SPFMError as err:
+                return self.async_abort(reason=_errors_for(err))
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected error loading SPFM units in options flow")
+                return self.async_abort(reason="unknown")
         current = entry.options.get(CONF_UNITS, entry.data.get(CONF_UNITS, []))
         return self.async_show_form(
-            step_id="init", data_schema=_units_schema(units, current), errors=errors
+            step_id="init", data_schema=_units_schema(self._units, current), errors=errors
         )

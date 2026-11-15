@@ -24,6 +24,19 @@ from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import SPFMActivityCoordinator, SPFMDataUpdateCoordinator
 from .parsing import MYT
 
+PARALLEL_UPDATES = 0
+
+
+def _device_info(unit: SPFMUnit) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, unit.key)},
+        name=f"{unit.project_name.title()} {unit.unit_no}".strip(),
+        manufacturer=MANUFACTURER,
+        model=MODEL,
+        entry_type=DeviceEntryType.SERVICE,
+        configuration_url="https://spfm.com.my/prod/selfcare/dashboard",
+    )
+
 
 def _published_date(item: dict[str, Any]) -> date | None:
     if item.get("published"):
@@ -82,14 +95,7 @@ class SPFMAnnouncementCalendar(CoordinatorEntity[SPFMDataUpdateCoordinator], Cal
         super().__init__(coordinator)
         self._unit = unit
         self._attr_unique_id = f"{unit.unit_id}_announcements_calendar"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unit.key)},
-            name=f"{unit.project_name.title()} {unit.unit_no}".strip(),
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://spfm.com.my/prod/selfcare/dashboard",
-        )
+        self._attr_device_info = _device_info(unit)
 
     def _events(self) -> list[CalendarEvent]:
         data = (self.coordinator.data or {}).get(self._unit.key) or {}
@@ -172,7 +178,7 @@ class SPFMVisitorCalendar(CoordinatorEntity[SPFMActivityCoordinator], CalendarEn
         super().__init__(coordinator)
         self._unit = unit
         self._attr_unique_id = f"{unit.unit_id}_visitors_calendar"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unit.key)})
+        self._attr_device_info = _device_info(unit)
 
     def _events(self) -> list[CalendarEvent]:
         data = (self.coordinator.data or {}).get(self._unit.key) or {}

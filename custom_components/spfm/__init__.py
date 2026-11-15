@@ -6,16 +6,29 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
 from .api import SPFMAuthError, SPFMClient, SPFMError, SPFMUnit
-from .const import CONF_UNITS, PLATFORMS, VERSION
+from .const import CONF_UNITS, DOMAIN, PLATFORMS, VERSION
 from .coordinator import SPFMActivityCoordinator, SPFMDataUpdateCoordinator
 from .frontend import async_register_card
 from .services import async_setup_services
 from .views import async_register_views
 
 type SPFMConfigEntry = ConfigEntry[SPFMDataUpdateCoordinator]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the SPFM integration."""
+    async_setup_services(hass)
+    async_register_views(hass)
+    await async_register_card(hass, VERSION)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SPFMConfigEntry) -> bool:
@@ -38,7 +51,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SPFMConfigEntry) -> bool
     except SPFMError as err:
         raise ConfigEntryNotReady(str(err)) from err
 
-    coordinator = SPFMDataUpdateCoordinator(hass, client, units, storage_key=entry.entry_id)
+    # Remove deselected unit devices from the device registry (stale-devices).
+    device_reg = dr.async_get(hass)
+    active_unit_keys = {u.key for u in units}
+    for device_entry in dr.async_entries_for_config_entry(device_reg, entry.entry_id):
+        if any(
+            domain == DOMAIN and ident not in active_unit_keys
+            for domain, ident in device_entry.identifiers
+        ):
+            device_reg.async_remove_device(device_entry.id)
+
+    coordinator = SPFMDataUpdateCoordinator(
+        hass, client, units, storage_key=entry.entry_id, config_entry=entry
+    )
     await coordinator.async_load_seen()
     await coordinator.async_config_entry_first_refresh()
 
@@ -50,7 +75,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SPFMConfigEntry) -> bool
     except SPFMError:
         member_id = None
     activity = SPFMActivityCoordinator(
-        hass, client, units, member_id, coordinator, storage_key=entry.entry_id
+        hass,
+        client,
+        units,
+        member_id,
+        coordinator,
+        storage_key=entry.entry_id,
+        config_entry=entry,
     )
     await activity.async_load_seen()
     await activity.async_refresh()  # best-effort; entities go unavailable on failure
@@ -72,10 +103,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: SPFMConfigEntry) -> boo
 
 async def async_remove_entry(hass: HomeAssistant, entry: SPFMConfigEntry) -> None:
     """Delete stored announcement state when the entry is removed."""
-    from homeassistant.helpers.storage import Store
-
-    from .const import DOMAIN
-
     for suffix, version in (("announcements", 1), ("activity", 2), ("billing", 1)):
         await Store(hass, version, f"{DOMAIN}.{entry.entry_id}_{suffix}").async_remove()
 

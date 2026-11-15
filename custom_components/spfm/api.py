@@ -196,6 +196,7 @@ class SPFMClient:
                 if not self._token:
                     await self.login()
         for attempt in (1, 2):
+            used_token = self._token
             try:
                 async with self._session.request(
                     method,
@@ -204,7 +205,7 @@ class SPFMClient:
                     json=json,
                     headers={
                         "Accept": "application/json",
-                        "Authorization": f"Bearer {self._token}",
+                        "Authorization": f"Bearer {used_token}",
                         "User-Agent": USER_AGENT,
                     },
                     timeout=DEFAULT_TIMEOUT,
@@ -213,7 +214,8 @@ class SPFMClient:
                     if resp.status == 401 and attempt == 1:
                         _LOGGER.debug("SPFM token rejected, logging in again")
                         async with self._login_lock:
-                            await self.login()
+                            if self._token == used_token:
+                                await self.login()
                         continue
                     if resp.status == 401:
                         raise SPFMAuthError("Session rejected after re-login")
@@ -295,18 +297,22 @@ class SPFMClient:
         if path is None:
             raise SPFMApiError(f"No document for type {doc_type!r}")
         if not self._token:
-            await self.login()
+            async with self._login_lock:
+                if not self._token:
+                    await self.login()
         for attempt in (1, 2):
+            used_token = self._token
             try:
                 async with self._session.get(
                     f"{API_BASE}/{path}/{record_id}",
                     params=self._unit_params(unit),
-                    headers={"Authorization": f"Bearer {self._token}", "User-Agent": USER_AGENT},
+                    headers={"Authorization": f"Bearer {used_token}", "User-Agent": USER_AGENT},
                     timeout=aiohttp.ClientTimeout(total=60),
                 ) as resp:
                     if resp.status == 401 and attempt == 1:
                         async with self._login_lock:
-                            await self.login()
+                            if self._token == used_token:
+                                await self.login()
                         continue
                     if resp.status == 401:
                         raise SPFMAuthError("Session rejected after re-login")

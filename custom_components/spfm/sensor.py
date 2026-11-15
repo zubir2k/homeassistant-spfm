@@ -26,6 +26,8 @@ from .const import CURRENCY_RM, DOMAIN, MANUFACTURER, MODEL, PAY_URL
 from .views import document_path
 from .coordinator import SPFMDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 def _d(value: str | None) -> date | None:
     return date.fromisoformat(value) if value else None
@@ -130,11 +132,37 @@ def _notices(d: dict[str, Any]) -> dict[str, Any]:
 
 
 def _feed(d: dict[str, Any]) -> dict[str, Any]:
+    if "announcement_feed" in d and d["announcement_feed"] is not None:
+        return d["announcement_feed"]
     return announcement_feed(d.get("notifications"), d.get("announcements"))
 
 
 def _top(d: dict[str, Any]) -> dict[str, Any]:
     return _feed(d).get("latest") or {}
+
+
+def _feed_attrs(d: dict[str, Any]) -> dict[str, Any]:
+    feed = _feed(d)
+    top = feed.get("latest") or {}
+    return {
+        **{
+            k: top.get(k)
+            for k in (
+                "id",
+                "title",
+                "message",
+                "published",
+                "start_date",
+                "end_date",
+                "active",
+                "url",
+                "pdf_url",
+                "notice",
+            )
+        },
+        "total": feed.get("total"),
+        "announcements": feed.get("items") or [],
+    }
 
 
 def _pdf(a: dict[str, Any]) -> str | None:
@@ -174,15 +202,7 @@ FEED_SENSORS: tuple[SPFMSensorDescription, ...] = (
         translation_key="latest_announcement",
         icon="mdi:bullhorn-outline",
         value_fn=lambda d: (_top(d).get("title") or "")[:255] or None,
-        attrs_fn=lambda d: {
-            **{
-                k: _top(d).get(k)
-                for k in ("id", "title", "message", "published", "start_date", "end_date",
-                          "active", "url", "pdf_url", "notice")
-            },
-            "total": _feed(d).get("total"),
-            "announcements": _feed(d).get("items") or [],
-        },
+        attrs_fn=_feed_attrs,
     ),
 )
 

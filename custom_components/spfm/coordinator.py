@@ -7,6 +7,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import Store
@@ -16,19 +17,20 @@ from .api import SPFMAuthError, SPFMClient, SPFMError, SPFMUnit
 from .const import (
     ACTIVITY_POLL_INTERVAL,
     DEFAULT_POLL_INTERVAL,
-    EVENT_NEW_BILL,
-    EVENT_NOTIFICATION,
-    PAY_URL,
-    EVENT_VISITOR_ARRIVED,
-    EVENT_VISITOR_DEPARTED,
-    EVENT_VISITOR_PENDING,
     DEFAULT_RETRY_ATTEMPTS,
     DEFAULT_RETRY_BACKOFF_FACTOR,
     DEFAULT_RETRY_BASE_DELAY,
     DOMAIN,
     EVENT_NEW_ANNOUNCEMENT,
+    EVENT_NEW_BILL,
+    EVENT_NOTIFICATION,
+    EVENT_VISITOR_ARRIVED,
+    EVENT_VISITOR_DEPARTED,
+    EVENT_VISITOR_PENDING,
+    PAY_URL,
 )
 from .parsing import (
+    announcement_feed,
     merge_announcements,
     summarize,
     summarize_announcements,
@@ -36,6 +38,7 @@ from .parsing import (
     summarize_visitors,
 )
 from .retry import with_retry
+from .views import document_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,13 +56,21 @@ class SPFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]
         client: SPFMClient,
         units: list[SPFMUnit],
         storage_key: str | None = None,
+        config_entry: ConfigEntry | None = None,
     ) -> None:
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_POLL_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_POLL_INTERVAL,
+        )
         self.client = client
         self.units = units
         self.activity: SPFMActivityCoordinator | None = None
         # {unit_key: [bill reference numbers already announced]}
         self._bills_seen: dict[str, list[str]] = {}
+        self._unavail_logged: set[str] = set()
         self._store: Store | None = (
             Store(hass, 1, f"{DOMAIN}.{storage_key}_billing") if storage_key else None
         )
@@ -73,8 +84,6 @@ class SPFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]
 
     def _fire_new_bills(self, data: dict[str, dict[str, Any]]) -> None:
         """Fire spfm_new_bill once per new invoice. The first poll only baselines."""
-        from .views import document_path
-
         changed = False
         for unit in self.units:
             udata = data.get(unit.key)
@@ -134,6 +143,7 @@ class SPFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]
 
         # Announcements are best-effort: a failure keeps the previous list
         # rather than taking the billing sensors down with it.
+        ann_log_key = f"{unit.key}_announcements"
         try:
             web, dash = await asyncio.gather(
                 self._retry(lambda: self.client.get_announcements(unit)),
@@ -151,10 +161,17 @@ class SPFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]
                     None if isinstance(dash, Exception) else dash,
                 )
             )
+            if ann_log_key in self._unavail_logged:
+                self._unavail_logged.discard(ann_log_key)
+                _LOGGER.info("SPFM announcements recovered for unit %s", unit.unit_no)
         except SPFMAuthError:
             raise
         except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("SPFM announcements failed for unit %s: %s", unit.unit_no, err)
+            if ann_log_key not in self._unavail_logged:
+                self._unavail_logged.add(ann_log_key)
+                _LOGGER.warning("SPFM announcements failed for unit %s: %s", unit.unit_no, err)
+            else:
+                _LOGGER.debug("SPFM announcements failed for unit %s: %s", unit.unit_no, err)
             prev = (self.data or {}).get(unit.key) or {}
             result["announcements"] = prev.get("announcements")
         return result
@@ -176,8 +193,15 @@ class SPFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]
             if isinstance(result, SPFMAuthError):
                 raise ConfigEntryAuthFailed(str(result)) from result
             if isinstance(result, Exception):
-                _LOGGER.warning("SPFM fetch failed for unit %s: %s", unit.unit_no, result)
+                if unit.key not in self._unavail_logged:
+                    self._unavail_logged.add(unit.key)
+                    _LOGGER.warning("SPFM fetch failed for unit %s: %s", unit.unit_no, result)
+                else:
+                    _LOGGER.debug("SPFM fetch failed for unit %s: %s", unit.unit_no, result)
                 continue
+            if unit.key in self._unavail_logged:
+                self._unavail_logged.discard(unit.key)
+                _LOGGER.info("SPFM fetch recovered for unit %s", unit.unit_no)
             data[unit.key] = result
             ok += 1
 
@@ -208,8 +232,15 @@ class SPFMActivityCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         member_id: int | None,
         billing: SPFMDataUpdateCoordinator,
         storage_key: str | None = None,
+        config_entry: ConfigEntry | None = None,
     ) -> None:
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_activity", update_interval=ACTIVITY_POLL_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_activity",
+            update_interval=ACTIVITY_POLL_INTERVAL,
+        )
         self.client = client
         self.units = units
         self.member_id = member_id
@@ -246,22 +277,33 @@ class SPFMActivityCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 results[key] = None
         if all(v is None for v in results.values()):
             raise UpdateFailed(f"SPFM activity fetch failed for {unit.unit_no}")
-        if results.get("notifications") is not None:
+        appointments_ok = results["appointments"] is not None
+        pending_ok = results["pending"] is not None
+        notifications_ok = results.get("notifications") is not None
+        out["notifications_ok"] = notifications_ok
+        if notifications_ok:
             out["notifications"] = summarize_notifications(results["notifications"])
         else:
             out["notifications"] = prev.get("notifications")
-        if results["appointments"] is None and results["pending"] is None:
-            out["visitors"] = prev.get("visitors")
+        if not appointments_ok and not pending_ok:
+            prev_vis = prev.get("visitors")
+            out["visitors"] = (
+                {**prev_vis, "appointments_ok": False, "pending_ok": False}
+                if isinstance(prev_vis, dict)
+                else None
+            )
         else:
             old = prev.get("visitors") or {}
             out["visitors"] = summarize_visitors(
-                results["appointments"] if results["appointments"] is not None else [],
-                results["pending"] if results["pending"] is not None else [],
+                results["appointments"] if appointments_ok else [],
+                results["pending"] if pending_ok else [],
             )
-            if results["appointments"] is None:
+            out["visitors"]["appointments_ok"] = appointments_ok
+            out["visitors"]["pending_ok"] = pending_ok
+            if not appointments_ok:
                 out["visitors"].update({k: old.get(k, []) for k in ("items", "upcoming")})
                 out["visitors"]["next"] = old.get("next")
-            if results["pending"] is None:
+            if not pending_ok:
                 out["visitors"]["pending"] = old.get("pending", [])
         return out
 
@@ -285,6 +327,9 @@ class SPFMActivityCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         for key, udata in data.items():
             # Expose the listings too so "latest announcement" can merge both feeds.
             udata["announcements"] = ((self.billing.data or {}).get(key) or {}).get("announcements")
+            udata["announcement_feed"] = announcement_feed(
+                udata.get("notifications"), udata.get("announcements")
+            )
         self._fire_events(data)
         return data
 
@@ -314,7 +359,7 @@ class SPFMActivityCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                     changed = True
                 return new if had else []  # first sight of a bucket: baseline
 
-            if notif is not None:
+            if notif is not None and udata.get("notifications_ok", True):
                 new_ids = set(track("notifications", [n["id"] for n in notif]))
                 announced = set(seen.get("announced", []))
                 for n in reversed(notif):  # oldest first
@@ -341,17 +386,19 @@ class SPFMActivityCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 track("announced", [n["object_id"] for n in notif if n["module"] == "ANNOUNCEMENT"])
 
             if vis:
-                pending = vis.get("pending") or []
-                new_pending = set(track("pending", [p["id"] for p in pending]))
-                for v in (v for v in pending if v["id"] in new_pending):
-                    _LOGGER.info("SPFM visitor waiting for approval at %s: %s", unit.unit_no, v["name"])
-                    self.hass.bus.async_fire(EVENT_VISITOR_PENDING, {**base, **v})
-                items = vis.get("items") or []
-                for bucket, field, event in (("in", "scan_in", EVENT_VISITOR_ARRIVED), ("out", "scan_out", EVENT_VISITOR_DEPARTED)):
-                    new = set(track(bucket, [v["id"] for v in items if v.get(field)]))
-                    for v in items:
-                        if v["id"] in new:
-                            self.hass.bus.async_fire(event, {**base, **v})
+                if vis.get("pending_ok", True):
+                    pending = vis.get("pending") or []
+                    new_pending = set(track("pending", [p["id"] for p in pending]))
+                    for v in (v for v in pending if v["id"] in new_pending):
+                        _LOGGER.info("SPFM visitor waiting for approval at %s: %s", unit.unit_no, v["name"])
+                        self.hass.bus.async_fire(EVENT_VISITOR_PENDING, {**base, **v})
+                if vis.get("appointments_ok", True):
+                    items = vis.get("items") or []
+                    for bucket, field, event in (("in", "scan_in", EVENT_VISITOR_ARRIVED), ("out", "scan_out", EVENT_VISITOR_DEPARTED)):
+                        new = set(track(bucket, [v["id"] for v in items if v.get(field)]))
+                        for v in items:
+                            if v["id"] in new:
+                                self.hass.bus.async_fire(event, {**base, **v})
             if first:
                 _LOGGER.debug("SPFM activity baselined for %s", unit.unit_no)
         if changed and self._store is not None:

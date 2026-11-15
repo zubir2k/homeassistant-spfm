@@ -22,6 +22,14 @@
         "data": {
           "password": "Password"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure SPFM",
+        "description": "Update your SPFM Selfcare credentials.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -34,7 +42,9 @@
     },
     "abort": {
       "already_configured": "This SPFM account is already configured.",
-      "reauth_successful": "Re-authentication was successful."
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "Reconfiguration was successful.",
+      "unique_id_mismatch": "The account does not match the configured SPFM account."
     }
   },
   "options": {
@@ -133,6 +143,14 @@
           "description": "Only needed if you have more than one unit."
         }
       }
+    }
+  },
+  "exceptions": {
+    "unit_not_found": {
+      "message": "No loaded SPFM unit matches unit_id={unit_id}"
+    },
+    "visitor_action_failed": {
+      "message": "SPFM rejected the request: {error}"
     }
   }
 }
