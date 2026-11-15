@@ -1,0 +1,24 @@
+approve_visitor:
+  fields:
+    visitor_id:
+      required: true
+      example: 123456
+      selector:
+        text:
+    unit_id:
+      required: false
+      example: 25535
+      selector:
+        text:
+reject_visitor:
+  fields:
+    visitor_id:
+      required: true
+      example: 123456
+      selector:
+        text:
+    unit_id:
+      required: false
+      example: 25535
+      selector:
+        text:

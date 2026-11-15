@@ -1,0 +1,138 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SPFM Selfcare",
+        "description": "Sign in with the email and password you use at spfm.com.my (Sunway Property Facility Management).",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "units": {
+        "title": "Select units",
+        "description": "Choose which units to monitor.",
+        "data": {
+          "units": "Units"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate SPFM",
+        "description": "The SPFM password for {username} no longer works. Enter the current one.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Email or password is incorrect.",
+      "two_factor": "This account has two-factor (OTP) login enabled, which this integration cannot complete. Turn 2FA off in the SPFM portal's My Account page and try again.",
+      "cannot_connect": "Could not reach spfm.com.my. Try again later.",
+      "no_units": "No units are linked to this SPFM account.",
+      "select_at_least_one": "Select at least one unit.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This SPFM account is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Monitored units",
+        "description": "Choose which units to monitor.",
+        "data": {
+          "units": "Units"
+        }
+      }
+    },
+    "error": {
+      "select_at_least_one": "Select at least one unit."
+    },
+    "abort": {
+      "invalid_auth": "Stored credentials were rejected. Re-authenticate first.",
+      "cannot_connect": "Could not reach spfm.com.my.",
+      "two_factor": "Two-factor login is enabled on this account.",
+      "unknown": "Unexpected error."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "outstanding_balance": {
+        "name": "Outstanding balance"
+      },
+      "next_due_date": {
+        "name": "Next due date"
+      },
+      "last_bill_amount": {
+        "name": "Last bill amount"
+      },
+      "last_bill_date": {
+        "name": "Last bill date"
+      },
+      "last_payment_amount": {
+        "name": "Last payment amount"
+      },
+      "last_payment_date": {
+        "name": "Last payment date"
+      },
+      "service_charge": {
+        "name": "Service charge"
+      },
+      "sinking_fund": {
+        "name": "Sinking fund"
+      },
+      "latest_announcement": {
+        "name": "Latest announcement"
+      },
+      "active_announcements": {
+        "name": "Notices"
+      },
+      "pending_visitors": {
+        "name": "Pending visitors"
+      },
+      "upcoming_visitors": {
+        "name": "Upcoming visitors"
+      }
+    },
+    "calendar": {
+      "announcements": {
+        "name": "Announcements"
+      },
+      "visitors": {
+        "name": "Visitors"
+      }
+    }
+  },
+  "services": {
+    "approve_visitor": {
+      "name": "Approve visitor",
+      "description": "Let in a walk-in visitor waiting at the guardhouse.",
+      "fields": {
+        "visitor_id": {
+          "name": "Visitor ID",
+          "description": "The id from the spfm_visitor_pending event or the Pending visitors sensor."
+        },
+        "unit_id": {
+          "name": "Unit ID",
+          "description": "Only needed if you have more than one unit."
+        }
+      }
+    },
+    "reject_visitor": {
+      "name": "Reject visitor",
+      "description": "Turn away a walk-in visitor waiting at the guardhouse.",
+      "fields": {
+        "visitor_id": {
+          "name": "Visitor ID",
+          "description": "The id from the spfm_visitor_pending event or the Pending visitors sensor."
+        },
+        "unit_id": {
+          "name": "Unit ID",
+          "description": "Only needed if you have more than one unit."
+        }
+      }
+    }
+  }
+}

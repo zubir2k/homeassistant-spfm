@@ -1,0 +1,174 @@
+[
+ {
+  "id": 15311,
+  "title": "CUSTOMER SERVICE AND MANAGEMENT OFFICE CONTACT INFORMATION & SERVICE REQUEST GUIDELINES",
+  "start_date": "2026-10-09T00:00:00+08:00",
+  "end_date": null,
+  "view_by": {
+   "id": 0,
+   "label": "All"
+  },
+  "viewers": [],
+  "message": "<div><p>To : All Valued Owners and Residents</p><p>&nbsp;</p><p>Dear Valued Owners, please be informed&hellip; CUSTOMER SERVICE AND MANAGEMENT OFFICE CONTACT INFORMATION & SERVICE REQUEST GUIDELINES</p></div>",
+  "image": null,
+  "attachments": [
+   {
+    "id": 755058,
+    "filename": "NOTICE 9_10_2026_ CUSTOMER SERVICE AND MANAGEMENT OFFICE CONTACT INFORMATION & SERVICE REQUEST GUIDELINES (2).pdf",
+    "description": null,
+    "desc": null,
+    "is_image": 0,
+    "hash_name": "2ZbWZAssvxKTg0KvxZ5AB5eYxo4Vk5qDMpB4035W.pdf",
+    "attached_to": {
+     "id": 15311,
+     "resource": "announcements"
+    },
+    "url": "https://spfm.com.my/service/api/document/attachment/2ZbWZAssvxKTg0KvxZ5AB5eYxo4Vk5qDMpB4035W.pdf",
+    "project_id": null,
+    "company_id": null,
+    "deleted_at": null,
+    "created_by": "staff",
+    "created_at": "2026-10-09T14:29:01+08:00",
+    "updated_by": "staff",
+    "updated_at": "2026-10-09T14:29:01+08:00"
+   }
+  ],
+  "last_notification": "2026-10-09T14:30:18+08:00",
+  "project_id": 53,
+  "company_id": 38,
+  "deleted_at": null,
+  "created_by": "staff",
+  "created_at": "2026-10-09T14:17:21+08:00",
+  "updated_by": "staff",
+  "updated_at": "2026-10-09T14:30:18+08:00"
+ },
+ {
+  "id": 15312,
+  "title": "JERNIH RESIDENCE – NOTICE ON SWIMMING POOL MAINTENANCE",
+  "start_date": "2026-10-09T00:00:00+08:00",
+  "end_date": "2026-10-13T00:00:00+08:00",
+  "view_by": {
+   "id": 0,
+   "label": "All"
+  },
+  "viewers": [],
+  "message": "<div><p>To : All Valued Owners and Residents</p><p>&nbsp;</p><p>Dear Valued Owners, please be informed&hellip; JERNIH RESIDENCE – NOTICE ON SWIMMING POOL MAINTENANCE</p></div>",
+  "image": null,
+  "attachments": [
+   {
+    "id": 755062,
+    "filename": "NOTICE 9_10_2026 Swimming Pool Maintenance (1).pdf",
+    "description": null,
+    "desc": null,
+    "is_image": 0,
+    "hash_name": "uGYW4sk8Wr26ruWmGOlM1MPmJ3EIALnt3pk6szEO.pdf",
+    "attached_to": {
+     "id": 15312,
+     "resource": "announcements"
+    },
+    "url": "https://spfm.com.my/service/api/document/attachment/uGYW4sk8Wr26ruWmGOlM1MPmJ3EIALnt3pk6szEO.pdf",
+    "project_id": null,
+    "company_id": null,
+    "deleted_at": null,
+    "created_by": "staff",
+    "created_at": "2026-10-09T14:36:30+08:00",
+    "updated_by": "staff",
+    "updated_at": "2026-10-09T14:36:30+08:00"
+   }
+  ],
+  "last_notification": "2026-10-09T14:36:49+08:00",
+  "project_id": 53,
+  "company_id": 38,
+  "deleted_at": null,
+  "created_by": "staff",
+  "created_at": "2026-10-09T14:31:59+08:00",
+  "updated_by": "staff",
+  "updated_at": "2026-10-09T14:36:49+08:00"
+ },
+ {
+  "id": 15317,
+  "title": "JERNIH RESIDENCE – UPDATE ON RAT CONTROL MEASURES",
+  "start_date": "2026-10-09T00:00:00+08:00",
+  "end_date": null,
+  "view_by": {
+   "id": 0,
+   "label": "All"
+  },
+  "viewers": [],
+  "message": "<div><p>To : All Valued Owners and Residents</p><p>&nbsp;</p><p>Dear Valued Owners, please be informed&hellip; JERNIH RESIDENCE – UPDATE ON RAT CONTROL MEASURES</p></div>",
+  "image": null,
+  "attachments": [
+   {
+    "id": 755366,
+    "filename": "NOTICE 9_10_2026_ Rats Issue.pdf",
+    "description": null,
+    "desc": null,
+    "is_image": 0,
+    "hash_name": "nXbxrJQZweU8pnj2SLimKu9GGypHwd3NHpituXGt.pdf",
+    "attached_to": {
+     "id": 15317,
+     "resource": "announcements"
+    },
+    "url": "https://spfm.com.my/service/api/document/attachment/nXbxrJQZweU8pnj2SLimKu9GGypHwd3NHpituXGt.pdf",
+    "project_id": null,
+    "company_id": null,
+    "deleted_at": null,
+    "created_by": "staff",
+    "created_at": "2026-10-09T18:36:54+08:00",
+    "updated_by": "staff",
+    "updated_at": "2026-10-09T18:36:54+08:00"
+   }
+  ],
+  "last_notification": "2026-10-09T18:37:37+08:00",
+  "project_id": 53,
+  "company_id": 38,
+  "deleted_at": null,
+  "created_by": "staff",
+  "created_at": "2026-10-09T18:36:54+08:00",
+  "updated_by": "staff",
+  "updated_at": "2026-10-09T18:37:37+08:00"
+ },
+ {
+  "id": 15318,
+  "title": "JERNIH RESIDENCE – PARCEL AND FOOD DELIVERY COLLECTION",
+  "start_date": "2026-10-09T00:00:00+08:00",
+  "end_date": null,
+  "view_by": {
+   "id": 0,
+   "label": "All"
+  },
+  "viewers": [],
+  "message": "<div><p>To : All Valued Owners and Residents</p><p>&nbsp;</p><p>Dear Valued Owners, please be informed&hellip; JERNIH RESIDENCE – PARCEL AND FOOD DELIVERY COLLECTION</p></div>",
+  "image": null,
+  "attachments": [
+   {
+    "id": 755371,
+    "filename": "NOTICE 9_10_2026_ PARCEL AND FOOD DELIVERY..pdf",
+    "description": null,
+    "desc": null,
+    "is_image": 0,
+    "hash_name": "2u7iqxMEmX3GL45JceU1WhQVOyUBwOg11gYEQBOp.pdf",
+    "attached_to": {
+     "id": 15318,
+     "resource": "announcements"
+    },
+    "url": "https://spfm.com.my/service/api/document/attachment/2u7iqxMEmX3GL45JceU1WhQVOyUBwOg11gYEQBOp.pdf",
+    "project_id": null,
+    "company_id": null,
+    "deleted_at": null,
+    "created_by": "staff",
+    "created_at": "2026-10-09T18:47:06+08:00",
+    "updated_by": "staff",
+    "updated_at": "2026-10-09T18:47:06+08:00"
+   }
+  ],
+  "last_notification": "2026-10-09T18:42:45+08:00",
+  "project_id": 53,
+  "company_id": 38,
+  "deleted_at": null,
+  "created_by": "staff",
+  "created_at": "2026-10-09T18:41:16+08:00",
+  "updated_by": "staff",
+  "updated_at": "2026-10-09T18:42:45+08:00"
+ }
+]
