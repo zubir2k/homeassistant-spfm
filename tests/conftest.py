@@ -1,9 +1,34 @@
 """Shared test setup."""
+from unittest.mock import patch
+import pytest
 
-try:  # pycares starts a daemon shutdown thread lazily; start it before the
-    # HA test harness snapshots threads so it isn't reported as lingering.
+from homeassistant.config_entries import ConfigEntryState
+from custom_components.spfm.const import DOMAIN
+
+try:
     import pycares
-
     pycares.Channel()
-except Exception:  # noqa: BLE001
+except Exception:
     pass
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    yield
+
+
+@pytest.fixture(autouse=True)
+def no_http_server():
+    """Don't open a real port during tests."""
+    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
+        yield
+
+
+@pytest.fixture(autouse=True)
+async def cleanup_entries(hass):
+    """Clean up and unload any config entries after each test."""
+    yield
+    for entry in list(hass.config_entries.async_entries(DOMAIN)):
+        if entry.state is ConfigEntryState.LOADED:
+            await hass.config_entries.async_unload(entry.entry_id)
+            await hass.async_block_till_done()
