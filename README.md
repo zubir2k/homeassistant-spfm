@@ -313,14 +313,7 @@ If a dashboard is in a browser that was open before the update, refresh the page
 ## Limitations
 
 - Accounts with **two-factor (OTP) login** enabled aren't supported (setup shows a clear error).
-- This is an unofficial integration, not affiliated with Sunway or the portal vendor. Be gentle with polling.
-
-## Development
-
-```bash
-pip install pytest pytest-homeassistant-custom-component
-pytest tests
-```
+- This is an independent community integration, not affiliated with Sunway or the portal vendor.
 
 ## Join the community
 
