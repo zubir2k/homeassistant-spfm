@@ -22,25 +22,30 @@ A Home Assistant custom integration for the [SPFM Selfcare portal](https://spfm.
 - **Re-auth flow** if your password changes; options flow to choose units
 
 ## Installation
-
-### Marketplace/HACS (custom repository)
-
+#### With Marketplace/HACS
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=zubir2k&repository=homeassistant-spfm&category=integration)
 
-1. Marketplace/HACS → **Integrations** → ⋮ → **Custom repositories**
-2. Add this repository's URL, category **Integration**
-3. Install **SPFM**, then restart Home Assistant
+> [!Tip]
+> If you are unable to use the button above, manually search for SPFM (Sunway Property Facility Management) in Marketplace/HACS.
 
-### Manual
+#### Manual
+1. Copy the `spfm` directory from `custom_components` in this repository and place inside your Home Assistant's `custom_components` directory.
+2. Restart Home Assistant
+3. Follow the instructions in the `Setup` section
 
-Copy `custom_components/spfm/` into your Home Assistant `config/custom_components/` folder and restart.
+> [!WARNING]
+> If installing manually, in order to be alerted about new releases, you will need to subscribe to releases from this repository.
 
-## Configuration
-
+## Setup
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=spfm)
 
-**Settings → Devices & Services → Add Integration → SPFM**, then enter your SPFM email and password.
-If more than one unit is linked, pick the ones to monitor.
+> [!Tip]
+> If you are unable to use the button above, follow the steps below:
+> 1. Navigate to the Home Assistant Integrations page (Settings --> Devices & Services)
+> 2. Click the `+ ADD INTEGRATION` button in the lower right-hand corner
+> 3. Search for `SPFM`
+
+Enter your SPFM email and password. If more than one unit is linked, pick the ones to monitor.
 
 ## Sensors (per unit)
 
