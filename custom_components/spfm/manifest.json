@@ -19,5 +19,6 @@
     "custom_components.spfm"
   ],
   "requirements": [],
-  "version": "0.9.3"
+  "version": "0.9.4",
+  "quality_scale": "silver"
 }
