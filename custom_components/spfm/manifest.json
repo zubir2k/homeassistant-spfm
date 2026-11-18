@@ -18,7 +18,7 @@
   "loggers": [
     "custom_components.spfm"
   ],
+  "quality_scale": "silver",
   "requirements": [],
-  "version": "0.9.4",
-  "quality_scale": "silver"
+  "version": "0.9.4"
 }
