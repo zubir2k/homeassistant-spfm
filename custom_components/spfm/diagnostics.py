@@ -9,10 +9,13 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import SPFMConfigEntry
+from .const import CONF_ACCOUNT_ID
 
 TO_REDACT = {
     CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_ACCOUNT_ID,
+    "account_id",
     "token",
     "access_token",
     "member_id",
@@ -20,6 +23,26 @@ TO_REDACT = {
     "mobile",
     "phone",
     "ic_no",
+    # Visitor personal data
+    "name",
+    "visitor_name",
+    "appointment_name",
+    "vehicle",
+    "vehicle_reg_no",
+    "company",
+    "company_name",
+    "link",
+    "appointment_link",
+    "image_url",
+    "purpose",
+    "appointment_purpose",
+    # Notification & announcement personal messages
+    "message",
+    "short_message",
+    "title",
+    "url",
+    "pdf_url",
+    "pdf_path",
 }
 
 
@@ -32,6 +55,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": {
+                "title": entry.title,
                 "data": dict(entry.data),
                 "options": dict(entry.options),
             },

@@ -3,7 +3,7 @@
  * announcements and notices. Shipped and auto-registered by the spfm
  * integration. No build step and no dependencies: a plain web component.
  */
-const CARD_VERSION = "0.9.5";
+const CARD_VERSION = "0.9.6";
 const ALL_SECTIONS = ["visitors", "announcements", "notices", "bill"];
 const SECTION_LABELS = {
   visitors: "Visitors",
@@ -44,6 +44,18 @@ const SPFM_MARK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAAeCAYAAAD
 
 const esc = (v) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+const safeUrl = (url) => {
+  if (!url) return null;
+  try {
+    const base = typeof location !== "undefined" ? location.href : "https://localhost";
+    const u = new URL(url, base);
+    if (u.protocol === "http:" || u.protocol === "https:") {
+      return u.href;
+    }
+  } catch (_) {}
+  return null;
+};
 
 const toDate = (v) => {
   if (!v) return null;
@@ -212,8 +224,11 @@ class SpfmCard extends HTMLElement {
           return `<div class="doc"><div class="doc-head"><span>${esc(head)}</span>${pdf}</div>${items}</div>`;
         })
         .join("");
-      if (payUrl)
-        body += `<div class="pay"><a class="btn approve" href="${esc(payUrl)}" target="_blank" rel="noreferrer"><ha-icon icon="mdi:credit-card-outline"></ha-icon>Pay ${this._money(amount)}</a></div>`;
+      const validPayUrl = safeUrl(payUrl);
+      if (validPayUrl)
+        body += `<div class="pay"><a class="btn approve" href="${esc(validPayUrl)}" target="_blank" rel="noreferrer"><ha-icon icon="mdi:credit-card-outline"></ha-icon>Pay ${this._money(amount)}</a></div>`;
+      else if (payUrl)
+        body += `<div class="pay"><span class="btn approve disabled"><ha-icon icon="mdi:credit-card-outline"></ha-icon>Pay ${this._money(amount)}</span></div>`;
     }
     return this._section("bill", "mdi:cash-clock", "Bill", body, this._ents.balance);
   }
@@ -223,7 +238,9 @@ class SpfmCard extends HTMLElement {
     const win = window.open("", "_blank");
     try {
       const res = await this._hass.callWS({ type: "auth/sign_path", path, expires: 60 });
-      const url = res.path.startsWith("http") ? res.path : this._hass.hassUrl ? this._hass.hassUrl(res.path) : res.path;
+      const rawUrl = res.path.startsWith("http") ? res.path : this._hass.hassUrl ? this._hass.hassUrl(res.path) : res.path;
+      const url = safeUrl(rawUrl);
+      if (!url) throw new Error("Invalid URL returned");
       if (win) win.location.href = url;
       else window.open(url, "_blank");
     } catch (err) {
@@ -338,7 +355,7 @@ class SpfmCard extends HTMLElement {
           .join("")
       : `<div class="empty">No active notices</div>`;
     const more = all.length - items.length;
-    const listUrl = this._attr("notices", "list_url");
+    const listUrl = safeUrl(this._attr("notices", "list_url"));
     const foot =
       more > 0 || listUrl
         ? `<div class="foot">${more > 0 ? `${more} more active` : ""}${more > 0 && listUrl ? " · " : ""}${
@@ -357,8 +374,9 @@ class SpfmCard extends HTMLElement {
   }
 
   _row(lead, title, meta, link, badge = "") {
-    const t = link
-      ? `<a href="${esc(link)}" target="_blank" rel="noreferrer">${esc(title)}</a>`
+    const validLink = safeUrl(link);
+    const t = validLink
+      ? `<a href="${esc(validLink)}" target="_blank" rel="noreferrer">${esc(title)}</a>`
       : `<span>${esc(title)}</span>`;
     return `<div class="row">${lead}<div class="main"><div class="title">${t}${badge}</div>${
       meta ? `<div class="meta">${esc(meta)}</div>` : ""
