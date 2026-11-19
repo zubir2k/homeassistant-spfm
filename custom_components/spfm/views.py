@@ -14,7 +14,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .api import DOCUMENT_PATHS, SPFMError
+from spfm import DOCUMENT_PATHS, SPFMError
 from .const import DOMAIN
 
 DOCUMENT_URL = f"/api/{DOMAIN}/document/{{unit_id}}/{{doc_type}}/{{record_id}}"

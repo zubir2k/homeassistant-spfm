@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.spfm.api import SPFMAuthError, SPFMUnit
+from spfm import SPFMAuthError, SPFMUnit
 from custom_components.spfm.const import CONF_UNITS, DOMAIN
 
 UNIT = SPFMUnit(1, "A-01-01", 53, 38, "RESIDENSI JERNIH KAJANG", "DAKSINA HARTA SDN. BHD.")
@@ -288,7 +288,7 @@ async def test_visitor_calendar(hass: HomeAssistant) -> None:
 
 async def test_failed_appointments_on_first_poll_does_not_flood_on_recovery(hass: HomeAssistant) -> None:
     """If appointments fail on the baseline poll, recovering on the next poll must baseline instead of flooding."""
-    from custom_components.spfm.api import SPFMConnectionError
+    from spfm import SPFMConnectionError
     from custom_components.spfm.const import EVENT_VISITOR_ARRIVED, EVENT_VISITOR_DEPARTED
 
     entry = _entry(hass)

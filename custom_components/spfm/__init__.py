@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .api import SPFMAuthError, SPFMClient, SPFMError, SPFMUnit
+from spfm import SPFMAuthError, SPFMClient, SPFMError, SPFMUnit
 from .const import CONF_UNITS, DOMAIN, PLATFORMS, VERSION
 from .coordinator import SPFMActivityCoordinator, SPFMDataUpdateCoordinator
 from .frontend import async_register_card

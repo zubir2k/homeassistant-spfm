@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .api import SPFMError, SPFMUnit
+from spfm import SPFMError, SPFMUnit
 from .const import DOMAIN
 from .coordinator import SPFMDataUpdateCoordinator
 

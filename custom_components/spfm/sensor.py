@@ -20,8 +20,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 
 from . import SPFMConfigEntry
-from .api import SPFMUnit
-from .parsing import announcement_feed
+from spfm import SPFMUnit
+from spfm import announcement_feed
 from .const import CURRENCY_RM, DOMAIN, MANUFACTURER, MODEL, PAY_URL
 from .views import document_path
 from .coordinator import SPFMDataUpdateCoordinator

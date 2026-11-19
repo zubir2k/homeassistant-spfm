@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import SPFMAuthError, SPFMClient, SPFMError, SPFMUnit
+from spfm import SPFMAuthError, SPFMClient, SPFMError, SPFMUnit
 from .const import (
     ACTIVITY_POLL_INTERVAL,
     DEFAULT_POLL_INTERVAL,
@@ -29,7 +29,7 @@ from .const import (
     EVENT_VISITOR_PENDING,
     PAY_URL,
 )
-from .parsing import (
+from spfm import (
     announcement_feed,
     merge_announcements,
     summarize,
@@ -37,7 +37,7 @@ from .parsing import (
     summarize_notifications,
     summarize_visitors,
 )
-from .retry import with_retry
+from spfm import with_retry
 from .views import document_path
 
 _LOGGER = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock
 
-from custom_components.spfm.api import SPFMClient, SPFMUnit
+from spfm import SPFMClient, SPFMUnit
 
 UNIT = SPFMUnit(1, "A-01-01", 53, 38, "RESIDENSI JERNIH KAJANG", "DAKSINA HARTA SDN. BHD.")
 

@@ -19,10 +19,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import SPFMConfigEntry
-from .api import SPFMUnit
+from spfm import SPFMUnit
 from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import SPFMActivityCoordinator, SPFMDataUpdateCoordinator
-from .parsing import MYT
+from spfm import MYT
 
 PARALLEL_UPDATES = 0
 

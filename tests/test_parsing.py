@@ -4,10 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location("spfm_parsing", ROOT / "custom_components/spfm/parsing.py")
-parsing = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(parsing)
+from spfm import parsing
 
 LINES = json.loads((Path(__file__).parent / "fixture_billing_and_payment.json").read_text())
 
@@ -73,7 +70,7 @@ def test_portal_datetime_formats():
 
 
 def test_announcement_feed_matches_notice_shape():
-    from custom_components.spfm.parsing import announcement_feed
+    from spfm import announcement_feed
 
     notices = {"items": [
         {"id": 1, "title": "CUSTOMER SERVICE AND MANAGEMENT OFFICE CONTACT INFORMATION & SERVICE REQUEST GUIDELINES",
