@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 DOMAIN = "spfm"
-VERSION = "0.9.6"  # keep in sync with manifest.json (cache-busts the card)
+VERSION = "0.9.7"  # keep in sync with manifest.json (cache-busts the card)
 PLATFORMS = ["calendar", "sensor"]
 
 CONF_UNITS = "units"

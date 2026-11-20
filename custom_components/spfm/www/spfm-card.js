@@ -3,7 +3,7 @@
  * announcements and notices. Shipped and auto-registered by the spfm
  * integration. No build step and no dependencies: a plain web component.
  */
-const CARD_VERSION = "0.9.6";
+const CARD_VERSION = "0.9.7";
 const ALL_SECTIONS = ["visitors", "announcements", "notices", "bill"];
 const SECTION_LABELS = {
   visitors: "Visitors",
