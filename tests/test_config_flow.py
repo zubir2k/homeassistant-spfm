@@ -324,7 +324,7 @@ async def test_reconfigure_flow_and_diagnostics(hass: HomeAssistant) -> None:
         diag = await async_get_config_entry_diagnostics(hass, entry)
         assert diag["entry"]["data"][CONF_USERNAME] == "**REDACTED**"
         assert diag["entry"]["data"][CONF_PASSWORD] == "**REDACTED**"
-        assert diag["units"][0]["unit_no"] == "A-01-01"
+        assert diag["units"][0]["unit_no"] == "**REDACTED**"
 
         result = await entry.start_reconfigure_flow(hass)
         assert result["type"] is FlowResultType.FORM

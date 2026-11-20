@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from custom_components.spfm.const import CONF_ACCOUNT_ID, CONF_UNITS
+from custom_components.spfm.const import CONF_ACCOUNT_ID
 from custom_components.spfm.diagnostics import async_get_config_entry_diagnostics
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,7 @@ async def test_diagnostics_redaction(hass: HomeAssistant) -> None:
         CONF_USERNAME: "secret_user",
         CONF_PASSWORD: "secret_password",
         CONF_ACCOUNT_ID: 12345,
-        CONF_UNITS: ["100"],
+        "units": ["100"],
     }
     entry.options = {}
 
@@ -88,7 +88,6 @@ async def test_diagnostics_redaction(hass: HomeAssistant) -> None:
     assert diag["entry"]["data"][CONF_USERNAME] == "**REDACTED**"
     assert diag["entry"]["data"][CONF_PASSWORD] == "**REDACTED**"
     assert diag["entry"]["data"][CONF_ACCOUNT_ID] == "**REDACTED**"
-    assert diag["entry"]["data"][CONF_UNITS] == "**REDACTED**"
 
     # Unit & property identifiers redacted
     unit = diag["units"][0]
@@ -96,7 +95,6 @@ async def test_diagnostics_redaction(hass: HomeAssistant) -> None:
     assert unit["unit_no"] == "**REDACTED**"
     assert unit["project_id"] == "**REDACTED**"
     assert unit["project_name"] == "**REDACTED**"
-    assert unit["company_name"] == "**REDACTED**"
 
     # Visitor personal data redacted
     visitor = diag["activity_data"]["100"]["visitors"]["items"][0]

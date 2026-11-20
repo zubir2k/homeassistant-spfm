@@ -9,13 +9,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import SPFMConfigEntry
-from .const import CONF_ACCOUNT_ID, CONF_UNITS
+from .const import CONF_ACCOUNT_ID
 
 TO_REDACT = {
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_ACCOUNT_ID,
-    CONF_UNITS,
     "account_id",
     "token",
     "access_token",
@@ -27,11 +26,9 @@ TO_REDACT = {
     # Property & unit identifiers
     "unit_no",
     "project_name",
-    "units",
     "unit_id",
     "unit_key",
     "project_id",
-    "company_name",
     # Visitor personal data
     "name",
     "visitor_name",
